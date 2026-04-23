@@ -1,6 +1,17 @@
 ------------------------------------------------------------
 -- border
 ------------------------------------------------------------
+--USE ibraheem_test;
+--
+CREATE OR ALTER PROCEDURE dailyData.usp_build_Border
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+
+
+
 
 DECLARE @T SYSNAME = 'border';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
@@ -48,3 +59,7 @@ SELECT * INTO #result FROM border;
 -- SELECT * FROM #border;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
+
+
+END;

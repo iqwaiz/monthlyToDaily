@@ -1,6 +1,18 @@
 ------------------------------------------------------------
 -- daily_inbound_estimates
 ------------------------------------------------------------
+--USE ibraheem_test;
+--
+CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_inbound_estimates
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+
+
+
+
 
 
 DECLARE @inbound_estimates_start date;-- = (SELECT MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]);
@@ -112,3 +124,9 @@ monthly_inbound_estimates as(
 
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
+
+
+
+
+END;

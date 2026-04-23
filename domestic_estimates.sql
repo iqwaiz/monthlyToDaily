@@ -1,6 +1,18 @@
 ------------------------------------------------------------
 -- daily_domestic_estimates
 ------------------------------------------------------------
+--USE ibraheem_test;
+--
+CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_domestic_estimates
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+
+
+
+
 
 declare @domestic_estimates_start date;
 set @domestic_estimates_start = '2024-01-01';
@@ -30,3 +42,7 @@ where
 select * into #result from targets;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
+
+
+END;

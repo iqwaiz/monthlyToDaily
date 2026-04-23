@@ -1,6 +1,18 @@
 ------------------------------------------------------------
 -- targets
 ------------------------------------------------------------
+--USE ibraheem_test;
+--
+CREATE OR ALTER PROCEDURE dailyData.usp_build_targets
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+
+
+
+
 
 DECLARE @T SYSNAME = 'targets';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
@@ -24,3 +36,9 @@ with targets AS (
 )SELECT * INTO #result FROM targets;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
+
+
+
+
+END;

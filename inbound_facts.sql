@@ -1,6 +1,18 @@
 ------------------------------------------------------------
 -- daily_inbound_facts
 ------------------------------------------------------------
+--USE ibraheem_test;
+--
+CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_inbound_facts
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+
+
+
+
 
 declare @start_date date = '2024-01-01';
 
@@ -67,3 +79,10 @@ with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
+
+
+
+
+
+END;

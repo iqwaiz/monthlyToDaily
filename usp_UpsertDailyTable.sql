@@ -1,4 +1,4 @@
-USE ibraheem_test;
+--USE ibraheem_test;
 
 -----
 

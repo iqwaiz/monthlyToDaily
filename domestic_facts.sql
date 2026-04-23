@@ -1,6 +1,18 @@
 ------------------------------------------------------------
 -- daily_domestic_facts
 ------------------------------------------------------------
+--USE ibraheem_test;
+--
+CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_domestic_facts
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+
+
+
+
 
 declare @start_date date = '2024-01-01';
 
@@ -61,3 +73,8 @@ CROSS APPLY (
 )select * into #result from daily_domestic_facts
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
+
+
+
+END;
