@@ -4,57 +4,10 @@
 
 declare @start_date date = '2024-01-01';
 
-
-IF OBJECT_ID('tempdb..#border') IS NOT NULL DROP TABLE #border;
-with monthly_border as (
-	select
-		YEAR(TRAVEL_DATE) as year,
-	    MONTH(TRAVEL_DATE) as month,
-	--    FROM_COUNTRY_NAME_EN as country,
-	    NATIONALITY_COUNTRY_EN as country,
-	    sum(NUMBER_OF_TOURIST) as border_monthly_visits
-
-	    from MT.tdp.BOARDER_INBOUND_VW
-		-- where year(TRAVEL_DATE) >= @start_year
-		group by
-		    YEAR(TRAVEL_DATE),
-		    MONTH(TRAVEL_DATE),
-		    --FROM_COUNTRY_NAME_EN
-		    NATIONALITY_COUNTRY_EN
-),
-daily_border as ( -- MT.tdp.BOARDER_INBOUND_VW
-select
-    YEAR(TRAVEL_DATE) as year,
-    MONTH(TRAVEL_DATE) as month,
-    DAY(TRAVEL_DATE) as day,
---    FROM_COUNTRY_NAME_EN as country,
-    NATIONALITY_COUNTRY_EN as country,
-    sum(NUMBER_OF_TOURIST) as border_daily_visits
-    
-
-from MT.tdp.BOARDER_INBOUND_VW
--- where year(TRAVEL_DATE) >= @start_year
-group by
-    YEAR(TRAVEL_DATE),
-    MONTH(TRAVEL_DATE),
-    DAY(TRAVEL_DATE),
-    --FROM_COUNTRY_NAME_EN
-    NATIONALITY_COUNTRY_EN
-),
-border as (
-	SELECT
-	    d.*,
-	    m.border_monthly_visits,
-	    1.0 * d.border_daily_visits / m.border_monthly_visits AS border_daily_ratio
-	FROM daily_border d
-	JOIN monthly_border m
-	    ON m.year    = d.year
-	   AND m.month   = d.month
-	   AND m.country = d.country
-)select * into #border from border
+DECLARE @T SYSNAME = 'daily_inbound_facts';
+IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
 
-IF OBJECT_ID('tempdb..#daily_inbound_facts') IS NOT NULL DROP TABLE #daily_inbound_facts;
 with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 	select 
 		'inbound_fact' as data_type,
@@ -83,6 +36,7 @@ with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 ),daily_inbound_facts as (
 	select
 		m.data_type,
+		DATEFROMPARTS(m.year, m.month, b.day) as date,
 	    m.year,
 	    m.month,
 	    b.day,
@@ -105,13 +59,11 @@ with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 	    m.monthly_spend * b.border_daily_ratio as daily_spend
 	
 	from inbound_visits_facts m
-	left join #border b
+	left join ibraheem_test.dailyData.border b
 	    on m.year = b.year
 	    and m.month = b.month
 	    and m.country = b.country
-)select * into #daily_inbound_facts from daily_inbound_facts
-
-select * from #daily_inbound_facts
+)select * into #result from daily_inbound_facts
 
 
-EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'daily_inbound_facts';
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;

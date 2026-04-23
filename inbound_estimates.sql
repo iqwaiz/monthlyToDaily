@@ -6,32 +6,11 @@
 DECLARE @inbound_estimates_start date;-- = (SELECT MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]);
 
 --SELECT @inbound_estimates_start = MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]  WITH (NOLOCK);
-set @inbound_estimates_start = '2025-11-01';
+set @inbound_estimates_start = '2024-01-01';
 
+DECLARE @T SYSNAME = 'daily_inbound_estimates';
+IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
-
-IF OBJECT_ID('tempdb..#targets') IS NOT NULL DROP TABLE #targets;
-with targets AS (
-    SELECT
-        vt.Year AS year,
-        vt.MonthNo AS month,
-        vt.Country AS country,
-        vt.BU,
-        vt.Purpose AS purpose,
-        vt.Committed_value AS visits_target,
-        st.Committed_value AS spend_target
-    FROM [SIDR].[Business_Review].[Fact_Visits_Target] vt
-    JOIN [SIDR].[Business_Review].[Fact_Spend_Target] st
-          ON  st.Year    = vt.Year
-          AND st.MonthNo = vt.MonthNo
-          AND st.Country = vt.Country
-          AND st.BU      = vt.BU
-          AND st.Purpose = vt.Purpose
-)SELECT * INTO #targets FROM targets;
-
------
-
-IF OBJECT_ID('tempdb..#daily_inbound_estimates') IS NOT NULL DROP TABLE #daily_inbound_estimates;
 with inbound_visit_estimates as(
 	SELECT
 		est.date_estimate,
@@ -99,7 +78,7 @@ monthly_inbound_estimates as(
 	    ON v.origin_country = c.Country_Name_En
 	LEFT JOIN SIDR.dbo.Rel_BU_level_Country b WITH (NOLOCK)
 	    ON b.Country_Key = c.country_key
-    LEFT JOIN #targets t
+    LEFT JOIN ibraheem_test.dailyData.targets t
 		ON t.year    = YEAR(v.date_estimate)
 		AND t.month   = MONTH(v.date_estimate)
 		AND t.country = v.origin_country
@@ -110,7 +89,7 @@ monthly_inbound_estimates as(
 	    m.data_type,
 --	    m.date,
 --	    DATEADD(DAY, d.day - 1, m.date) as full_date,
-	    DATEFROMPARTS(m.year, m.month, d.day) as full_date,
+	    DATEFROMPARTS(m.year, m.month, d.day) as date,
 	    m.year,
 	    m.month,
 	    d.day,
@@ -118,9 +97,9 @@ monthly_inbound_estimates as(
 	    m.purpose,
 	    m.country,
 	    m.BU,
-	    m.visits / m.days_in_month as visits_daily,
-	    m.spend  / m.days_in_month as spend_daily,
-	    m.nights / m.days_in_month as nights_daily,
+	    m.visits / m.days_in_month as daily_visits,
+	    m.spend  / m.days_in_month as daily_spend,
+	    m.nights / m.days_in_month as daily_nights,
 	    m.visits_target / m.days_in_month as visits_target,
         m.spend_target  / m.days_in_month as spend_target
 	FROM monthly_inbound_estimates m
@@ -129,10 +108,7 @@ monthly_inbound_estimates as(
 	           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as day
 	    FROM master..spt_values
 	) d
-)SELECT * INTO #daily_inbound_estimates FROM daily_inbound_estimates;
+)SELECT * INTO #result FROM daily_inbound_estimates;
 
 
-SELECT * FROM #daily_inbound_estimates;
---SELECT * FROM #targets;
-
-EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'daily_inbound_estimates';
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;

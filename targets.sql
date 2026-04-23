@@ -2,7 +2,9 @@
 -- targets
 ------------------------------------------------------------
 
-IF OBJECT_ID('tempdb..#targets') IS NOT NULL DROP TABLE #targets;
+DECLARE @T SYSNAME = 'targets';
+IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
+
 with targets AS (
     SELECT
         vt.Year AS year,
@@ -19,6 +21,6 @@ with targets AS (
           AND st.Country = vt.Country
           AND st.BU      = vt.BU
           AND st.Purpose = vt.Purpose
-)SELECT * INTO #targets FROM targets;
+)SELECT * INTO #result FROM targets;
 
-EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'targets';
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;

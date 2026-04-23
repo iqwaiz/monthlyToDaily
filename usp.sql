@@ -11,10 +11,14 @@ BEGIN
     DECLARE @Full NVARCHAR(300) = 'dailyData.' + @TableName;
     DECLARE @SQL  NVARCHAR(MAX);
 
-    IF OBJECT_ID(@Full) IS NULL
-        SET @SQL = 'SELECT * INTO ' + @Full + ' FROM #' + @TableName + ';';
+    -- Drop persistent table if exists
+    IF OBJECT_ID(@Full) IS NOT NULL
+        SET @SQL = 'DROP TABLE ' + @Full + '; ';
     ELSE
-        SET @SQL = 'TRUNCATE TABLE ' + @Full + '; INSERT INTO ' + @Full + ' SELECT * FROM #' + @TableName + ';';
+        SET @SQL = '';
+
+    -- Always recreate from #result
+    SET @SQL = @SQL + 'SELECT * INTO ' + @Full + ' FROM #result;';
 
     EXEC(@SQL);
 

@@ -4,7 +4,9 @@
 
 declare @start_date date = '2024-01-01';
 
-IF OBJECT_ID('tempdb..#daily_domestic_facts') IS NOT NULL DROP TABLE #daily_domestic_facts;
+DECLARE @T SYSNAME = 'daily_domestic_facts';
+IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
+
 with monthly_domestic_facts as( -- mt.mas.MAS_DOMESTICS_INC_VW
 select 
 	'domestic_fact' as data_type,
@@ -33,25 +35,29 @@ group by
 	VISIT_PURPOSE_EN
 ),daily_domestic_facts as (
 select
-	data_type,
-	year,
-	month,
-	country,
-	purpose,
-	monthly_visits,
-	monthly_nights,
-	monthly_spend,
-	days_in_month,
+	mf.data_type,
+	DATEFROMPARTS(mf.year, mf.month, d.day) as date,
+	mf.year,
+	mf.month,
+	d.day,
+	mf.country,
+	mf.purpose,
+	mf.monthly_visits,
+	mf.monthly_nights,
+	mf.monthly_spend,
+	mf.days_in_month,
 	
-	1.0 * monthly_visits / days_in_month as daily_visits,
-    1.0 * monthly_nights / days_in_month as daily_nights,
-    1.0 * monthly_spend / days_in_month as daily_spend
+	1.0 * mf.monthly_visits / mf.days_in_month as daily_visits,
+    1.0 * mf.monthly_nights / mf.days_in_month as daily_nights,
+    1.0 * mf.monthly_spend / mf.days_in_month as daily_spend
 	
 from monthly_domestic_facts mf
+CROSS APPLY (
+	    SELECT TOP (mf.days_in_month)
+	           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as day
+	    FROM master..spt_values
+) d
 
-)select * into #daily_domestic_facts from daily_domestic_facts
+)select * into #result from daily_domestic_facts
 
-select * from #daily_domestic_facts
-
-
-EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'daily_domestic_facts';
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
