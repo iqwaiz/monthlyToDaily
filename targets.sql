@@ -14,6 +14,7 @@ BEGIN
 
 
 
+
 DECLARE @T SYSNAME = 'targets';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
@@ -22,6 +23,7 @@ with targets AS (
         vt.Year AS year,
         vt.MonthNo AS month,
         vt.Country AS country,
+        DAY(EOMONTH(DATEFROMPARTS(vt.Year, vt.MonthNo, 1))) as days_in_month,
         vt.BU,
         vt.Purpose AS purpose,
         vt.Committed_value AS visits_target,
@@ -33,7 +35,27 @@ with targets AS (
           AND st.Country = vt.Country
           AND st.BU      = vt.BU
           AND st.Purpose = vt.Purpose
-)SELECT * INTO #result FROM targets;
+), daily_targets as (
+    select
+    DATEFROMPARTS(t.year, t.month, d.day) as date,
+    t.year,
+    t.month,
+    d.day,
+    t.country,
+    t.BU,
+    t.purpose,
+    t.visits_target as monthly_visits_target,
+    t.spend_target as monthly_spend_target,
+    1.0 * t.visits_target / t.days_in_month as daily_visits_target,
+    1.0 * t.spend_target  / t.days_in_month as daily_spend_target
+
+    from targets t
+    CROSS APPLY (
+	    SELECT TOP (t.days_in_month)
+	           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as day
+	    FROM master..spt_values
+	) d
+)SELECT * INTO #result FROM daily_targets;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
 
