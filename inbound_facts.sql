@@ -2,8 +2,7 @@
 -- daily_inbound_facts
 ------------------------------------------------------------
 
-DECLARE @start_year int = 2024;
-
+declare @start_date date = '2024-01-01';
 
 
 IF OBJECT_ID('tempdb..#border') IS NOT NULL DROP TABLE #border;
@@ -58,7 +57,7 @@ border as (
 IF OBJECT_ID('tempdb..#daily_inbound_facts') IS NOT NULL DROP TABLE #daily_inbound_facts;
 with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 	select 
-		'fact_inbound' as data_type,
+		'inbound_fact' as data_type,
 		YEAR as year,
 		MONTH_NUM as month,
 		ORIGIN_COUNTRY_NAME_EN as country,
@@ -74,7 +73,8 @@ with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 	where 
 		TRIP_TYPE_EN='tourist trip'
 		and VISIT_PURPOSE_EN != 'Hajj'
-		and year >= @start_year
+		and year >= year(@start_date)
+		and MONTH_NUM >= month(@start_date)
 	group by
 		YEAR,
 		MONTH_NUM,
@@ -100,9 +100,9 @@ with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 		
 	    -- mas daily visits distributed by daily border weight + purpose weight
 	    --m.monthly_visits * b.border_daily_ratio * m.purpose_weight as mas_daily_visits
-	    m.monthly_visits * b.border_daily_ratio as mas_daily_visits,
-	    m.monthly_nights * b.border_daily_ratio as mas_daily_nights,
-	    m.monthly_spend * b.border_daily_ratio as mas_daily_spend
+	    m.monthly_visits * b.border_daily_ratio as daily_visits,
+	    m.monthly_nights * b.border_daily_ratio as daily_nights,
+	    m.monthly_spend * b.border_daily_ratio as daily_spend
 	
 	from inbound_visits_facts m
 	left join #border b
@@ -114,3 +114,4 @@ with inbound_visits_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 select * from #daily_inbound_facts
 
 
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'daily_inbound_facts';

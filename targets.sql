@@ -20,3 +20,5 @@ with targets AS (
           AND st.BU      = vt.BU
           AND st.Purpose = vt.Purpose
 )SELECT * INTO #targets FROM targets;
+
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'targets';

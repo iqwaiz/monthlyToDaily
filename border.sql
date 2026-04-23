@@ -52,3 +52,5 @@ border as (
 )select * into #border from border 
 
 select * from #border
+
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'border';

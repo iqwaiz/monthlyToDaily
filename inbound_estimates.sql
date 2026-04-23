@@ -3,10 +3,11 @@
 ------------------------------------------------------------
 
 
-DECLARE @inbound_fact_end_date date;-- = (SELECT MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]);
+DECLARE @inbound_estimates_start date;-- = (SELECT MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]);
 
---SELECT @inbound_fact_end_date = MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]  WITH (NOLOCK);
-set @inbound_fact_end_date = '2025-11-01';
+--SELECT @inbound_estimates_start = MAX(DATEFROMPARTS(YEAR, [MONTH_NUM],1)) FROM [MT].[mas].[MAS_INBOUND_INC_VW]  WITH (NOLOCK);
+set @inbound_estimates_start = '2025-11-01';
+
 
 
 IF OBJECT_ID('tempdb..#targets') IS NOT NULL DROP TABLE #targets;
@@ -28,6 +29,7 @@ with targets AS (
           AND st.Purpose = vt.Purpose
 )SELECT * INTO #targets FROM targets;
 
+-----
 
 IF OBJECT_ID('tempdb..#daily_inbound_estimates') IS NOT NULL DROP TABLE #daily_inbound_estimates;
 with inbound_visit_estimates as(
@@ -43,7 +45,7 @@ with inbound_visit_estimates as(
 	--ON est.origin_country = c.Country_Name_En
 	--LEFT JOIN [SIDR].[dbo].[Rel_BU_level_Country] as r with(nolock)
 	--ON r.Country_Key = c.country_key
-	WHERE est.date_estimate > @inbound_fact_end_date
+	WHERE est.date_estimate >= @inbound_estimates_start
 	AND est.purpose <> 'Hajj'
 	GROUP BY
 		est.date_estimate,
@@ -63,7 +65,7 @@ inbound_spend_estimates as (
 	--ON est.origin_country = c.Country_Name_En
 	--LEFT JOIN [SIDR].[dbo].[Rel_BU_level_Country] as r with(nolock)
 	--ON r.Country_Key = c.country_key
-	WHERE est.date_estimate > @inbound_fact_end_date
+	WHERE est.date_estimate >= @inbound_estimates_start
 	AND est.purpose <> 'Hajj'
 	GROUP BY
 		est.date_estimate,
@@ -74,7 +76,7 @@ inbound_spend_estimates as (
 ),
 monthly_inbound_estimates as(
 	select
-		'est_inbound' as data_type,
+		'inbound_estimate' as data_type,
 	    v.date_estimate as date,
 	    YEAR(v.date_estimate) as year,
 	    MONTH(v.date_estimate) as month,
@@ -130,26 +132,7 @@ monthly_inbound_estimates as(
 )SELECT * INTO #daily_inbound_estimates FROM daily_inbound_estimates;
 
 
-
-
 SELECT * FROM #daily_inbound_estimates;
 --SELECT * FROM #targets;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable 'daily_inbound_estimates';
