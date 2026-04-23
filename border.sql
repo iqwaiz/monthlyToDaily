@@ -3,7 +3,7 @@
 ------------------------------------------------------------
 --USE ibraheem_test;
 --
-CREATE OR ALTER PROCEDURE dailyData.usp_build_Border
+CREATE OR ALTER PROCEDURE dailyData.usp_build_border
 AS
 BEGIN
     SET NOCOUNT ON;
