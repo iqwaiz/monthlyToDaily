@@ -11,7 +11,9 @@ BEGIN
 
 
 
-DECLARE @start_date date = '2024-01-01';
+
+
+DECLARE @start_date date = '2025-01-01';
 
 DECLARE @domestic_estimates_start date;
 DECLARE @inbound_estimates_start date;
@@ -34,7 +36,7 @@ SELECT @domestic_estimates_start =
        DATEADD(DAY, 1, MAX(date))
 FROM #domestic_facts;
 
-SELECT * FROM #domestic_facts;
+-- SELECT * FROM #domestic_facts;
 
 
 ------------------------------------------------------------
@@ -51,7 +53,7 @@ SELECT @inbound_estimates_start =
        DATEADD(DAY, 1, MAX(date))
 FROM #inbound_facts;
 
-SELECT * FROM #inbound_facts;
+-- SELECT * FROM #inbound_facts;
 
 
 ------------------------------------------------------------
@@ -68,7 +70,7 @@ SELECT @domestic_predictions_start =
        DATEADD(DAY, 1, MAX(date))
 FROM #domestic_estimates;
 
-SELECT * FROM #domestic_estimates;
+-- SELECT * FROM #domestic_estimates;
 
 
 ------------------------------------------------------------
@@ -85,12 +87,13 @@ SELECT @inbound_predictions_start =
        DATEADD(DAY, 1, MAX(date))
 FROM #inbound_estimates;
 
-SELECT * FROM #inbound_estimates;
+-- SELECT * FROM #inbound_estimates;
 
 
 ------------------------------------------------------------
 -- DOMESTIC PREDICTIONS
 ------------------------------------------------------------
+/*
 IF OBJECT_ID('tempdb..#domestic_predictions') IS NOT NULL DROP TABLE #domestic_predictions;
 
 SELECT *
@@ -98,12 +101,13 @@ INTO #domestic_predictions
 FROM ibraheem_test.dailyData.daily_domestic_predictions
 WHERE date >= @domestic_predictions_start;
 
-SELECT * FROM #domestic_predictions;
+-- SELECT * FROM #domestic_predictions;
 
-
+*/
 ------------------------------------------------------------
 -- INBOUND PREDICTIONS
 ------------------------------------------------------------
+/*
 IF OBJECT_ID('tempdb..#inbound_predictions') IS NOT NULL DROP TABLE #inbound_predictions;
 
 SELECT *
@@ -111,17 +115,59 @@ INTO #inbound_predictions
 FROM ibraheem_test.dailyData.daily_inbound_predictions
 WHERE date >= @inbound_predictions_start;
 
-SELECT * FROM #inbound_predictions;
+-- SELECT * FROM #inbound_predictions;
 
-
+*/
 ------------------------------------------------------------
 -- DATES
 ------------------------------------------------------------
+/*
 SELECT
     @domestic_estimates_start     AS domestic_estimates_start,
     @inbound_estimates_start      AS inbound_estimates_start,
     @domestic_predictions_start   AS domestic_predictions_start,
     @inbound_predictions_start    AS inbound_predictions_start;
+*/
+------------------------------------------------------------
+-- COMBINED OUTPUT (ALL TABLES, NO LABELS)
+------------------------------------------------------------
+DECLARE @T SYSNAME = 'all_daily_data';
+IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
+
+with combined as(
+	SELECT data_type, date, year, month, day, country, purpose, daily_visits, daily_spend
+	FROM #domestic_facts
+	UNION ALL
+	SELECT data_type, date, year, month, day, country, purpose, daily_visits, daily_spend
+	FROM #inbound_facts
+	UNION ALL
+	SELECT data_type, date, year, month, day, country, purpose, daily_visits, daily_spend
+	FROM #domestic_estimates
+	UNION ALL
+	SELECT data_type, date, year, month, day, country, purpose, daily_visits, daily_spend
+	FROM #inbound_estimates
+	/*
+	UNION ALL
+	SELECT data_type, date, year, month, day, country, purpose, daily_visits, daily_spend
+	FROM #domestic_predictions
+	UNION ALL
+	SELECT data_type, date, year, month, day, country, purpose, daily_visits, daily_spend
+	FROM #inbound_predictions;
+	*/
+), combined_with_targets as (
+	SELECT
+	    c.*,
+	    t.daily_visits_target,
+	    t.daily_spend_target
+	FROM combined c
+	LEFT JOIN ibraheem_test.dailyData.targets t
+	    ON  c.date    = t.date
+	    AND c.country = t.country
+	    AND c.purpose = t.purpose
+)SELECT * INTO #result FROM combined_with_targets;
+
+EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
+
 
 
 
