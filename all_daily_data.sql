@@ -157,6 +157,7 @@ with combined as(
 ), combined_with_targets as (
 	SELECT
 	    c.*,
+        t.BU,
 	    t.daily_visits_target,
 	    t.daily_spend_target
 	FROM combined c
