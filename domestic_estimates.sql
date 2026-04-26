@@ -28,8 +28,8 @@ with targets as (select
 	d.[DayofMonth] as day,
 	s.PURPOSE as purpose,
 	'Saudi Arabia' as country,
-	s.Visitors_YTD as visits,
-	s.Spend_YTD as spend
+	s.Visitors_YTD as daily_visits,
+	s.Spend_YTD as daily_spend
 
 from [MT].[estimates].[TOURISM_FLOWS_YTD_TBL] s
 left join SIDR.dbo.DIM_DATE d
