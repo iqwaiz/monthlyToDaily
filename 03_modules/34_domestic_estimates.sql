@@ -20,7 +20,7 @@ set @domestic_estimates_start = '2024-01-01';
 DECLARE @T SYSNAME = 'daily_domestic_estimates';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
-with targets as (select
+with daily_domestic_estimates as (select
 	'domestic_estimate' as data_type,
 	d.DayDate as date,
 	d.[YEAR] as year,
@@ -39,7 +39,7 @@ where
 	and PURPOSE != 'Hajj'
 	and d.DayDate >= @domestic_estimates_start
 ) 
-select * into #result from targets;
+select * into #result from daily_domestic_estimates;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
 
