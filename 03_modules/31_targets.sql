@@ -18,23 +18,30 @@ BEGIN
 DECLARE @T SYSNAME = 'targets';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
+
 with targets AS (
     SELECT
         vt.Year AS year,
         vt.MonthNo AS month,
         vt.Country AS country,
         DAY(EOMONTH(DATEFROMPARTS(vt.Year, vt.MonthNo, 1))) as days_in_month,
-        vt.BU,
+        -- vt.BU,
         vt.Purpose AS purpose,
-        vt.Committed_value AS visits_target,
-        st.Committed_value AS spend_target
+        COALESCE(SUM(vt.Committed_value), SUM(vt.Value)) AS visits_target,
+        COALESCE(SUM(st.Committed_value), SUM(st.Value)) AS spend_target
     FROM [SIDR].[Business_Review].[Fact_Visits_Target] vt
     JOIN [SIDR].[Business_Review].[Fact_Spend_Target] st
           ON  st.Year    = vt.Year
           AND st.MonthNo = vt.MonthNo
           AND st.Country = vt.Country
-          AND st.BU      = vt.BU
+        --   AND st.BU      = vt.BU
           AND st.Purpose = vt.Purpose
+    GROUP BY
+        vt.Year,
+        vt.MonthNo,
+        vt.Country,
+        -- vt.BU,
+        vt.Purpose
 ), daily_targets as (
     select
     DATEFROMPARTS(t.year, t.month, d.day) as date,
@@ -42,7 +49,7 @@ with targets AS (
     t.month,
     d.day,
     t.country,
-    t.BU,
+    -- t.BU,
     t.purpose,
     t.visits_target as monthly_visits_target,
     t.spend_target as monthly_spend_target,
