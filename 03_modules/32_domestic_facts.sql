@@ -14,6 +14,7 @@ BEGIN
 
 
 
+
 declare @start_date date = '2024-01-01';
 
 DECLARE @T SYSNAME = 'daily_domestic_facts';
@@ -48,10 +49,10 @@ group by
 ),daily_domestic_facts as (
 select
 	mf.data_type,
-	DATEFROMPARTS(mf.year, mf.month, d.day) as date,
+	DATEFROMPARTS(mf.year, mf.month, d.[DayofMonth]) as date,
 	mf.year,
 	mf.month,
-	d.day,
+	d.[DayofMonth] as day,
 	mf.country,
 	mf.purpose,
 	mf.monthly_visits,
@@ -64,16 +65,12 @@ select
     1.0 * mf.monthly_spend / mf.days_in_month as daily_spend
 	
 from monthly_domestic_facts mf
-CROSS APPLY (
-	    SELECT TOP (mf.days_in_month)
-	           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as day
-	    FROM master..spt_values
-) d
+join SIDR.dbo.DIM_DATE d
+    on d.[YEAR] = mf.[year] and d.[MONTH] = mf.month
 
 )select * into #result from daily_domestic_facts
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
-
 
 
 

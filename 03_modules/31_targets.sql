@@ -15,6 +15,7 @@ BEGIN
 
 
 
+
 DECLARE @T SYSNAME = 'targets';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
@@ -44,24 +45,22 @@ with targets AS (
         vt.Purpose
 ), daily_targets as (
     select
-    DATEFROMPARTS(t.year, t.month, d.day) as date,
-    t.year,
-    t.month,
-    d.day,
-    t.country,
-    -- t.BU,
-    t.purpose,
-    t.visits_target as monthly_visits_target,
-    t.spend_target as monthly_spend_target,
-    1.0 * t.visits_target / t.days_in_month as daily_visits_target,
-    1.0 * t.spend_target  / t.days_in_month as daily_spend_target
+	    DATEFROMPARTS(t.year, t.month, d.DayofMonth) as date,
+	    t.year,
+	    t.month,
+	    d.[DayofMonth] as day,
+	    t.country,
+	    -- t.BU,
+	    t.purpose,
+	    t.visits_target as monthly_visits_target,
+	    t.spend_target as monthly_spend_target,
+	    1.0 * t.visits_target / t.days_in_month as daily_visits_target,
+	    1.0 * t.spend_target  / t.days_in_month as daily_spend_target
 
     from targets t
-    CROSS APPLY (
-	    SELECT TOP (t.days_in_month)
-	           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as day
-	    FROM master..spt_values
-	) d
+    join SIDR.dbo.DIM_DATE d
+        on d.[YEAR] = t.[year] and d.[MONTH] = t.month
+
 )SELECT * INTO #result FROM daily_targets;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;

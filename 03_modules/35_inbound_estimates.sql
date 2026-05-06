@@ -75,7 +75,7 @@ monthly_inbound_estimates as(
 	    DAY(EOMONTH(v.date_estimate)) as days_in_month,
 	    v.purpose,
 	    v.origin_country as country,
-	    b.Busines_Unit as BU,
+	    -- b.Busines_Unit as BU,
 	    v.visits,
 	    s.spend,
 	    v.nights
@@ -88,8 +88,8 @@ monthly_inbound_estimates as(
 	   AND v.purpose = s.purpose
 	LEFT JOIN SIDR.dbo.Ref_Country c
 	    ON v.origin_country = c.Country_Name_En
-	LEFT JOIN SIDR.dbo.Rel_BU_level_Country b WITH (NOLOCK)
-	    ON b.Country_Key = c.country_key
+	-- LEFT JOIN SIDR.dbo.Rel_BU_level_Country b WITH (NOLOCK)
+	--     ON b.Country_Key = c.country_key
     -- LEFT JOIN ibraheem_test.dailyData.targets t
 	-- 	ON t.year    = YEAR(v.date_estimate)
 	-- 	AND t.month   = MONTH(v.date_estimate)
@@ -101,25 +101,22 @@ monthly_inbound_estimates as(
 	    m.data_type,
 --	    m.date,
 --	    DATEADD(DAY, d.day - 1, m.date) as full_date,
-	    DATEFROMPARTS(m.year, m.month, d.day) as date,
+	    DATEFROMPARTS(m.year, m.month, d.[DayofMonth]) as date,
 	    m.year,
 	    m.month,
-	    d.day,
+	    d.[DayofMonth] as day,
 --	    m.days_in_month,
 	    m.purpose,
 	    m.country,
-	    m.BU,
+	    -- m.BU,
 	    m.visits / m.days_in_month as daily_visits,
 	    m.spend  / m.days_in_month as daily_spend,
 	    m.nights / m.days_in_month as daily_nights
 	    -- m.visits_target / m.days_in_month as visits_target,
         -- m.spend_target  / m.days_in_month as spend_target
 	FROM monthly_inbound_estimates m
-	CROSS APPLY (
-	    SELECT TOP (m.days_in_month)
-	           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as day
-	    FROM master..spt_values
-	) d
+	join SIDR.dbo.DIM_DATE d
+	    on d.[YEAR] = m.[year] and d.[MONTH] = m.month
 )SELECT * INTO #result FROM daily_inbound_estimates;
 
 
