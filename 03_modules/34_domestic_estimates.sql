@@ -36,6 +36,7 @@ left join SIDR.dbo.DIM_DATE d
 on s.DATE_KEY = d.ID_Day
 where
 	TOURIST_TYPE = 'Domestic'
+	and YTD_Source = 'Estimated'
 	and PURPOSE != 'Hajj'
 	and d.DayDate >= @domestic_estimates_start
 ) 
