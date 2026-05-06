@@ -45,7 +45,6 @@ where
 group by
 	YEAR,
 	MONTH_NUM,
-	-- ORIGIN_COUNTRY_NAME_EN,
 	VISIT_PURPOSE_EN
 ),daily_domestic_facts as (
 select
