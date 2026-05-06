@@ -22,7 +22,7 @@ IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
 with monthly_domestic_facts as( -- mt.mas.MAS_DOMESTICS_INC_VW
 select 
-	'domestic_fact' as data_type,
+	'domestic_fact_mas' as data_type,
 	YEAR as year,
 	MONTH_NUM as month,
 	'Saudi Arabia' as country,
@@ -41,6 +41,7 @@ where
 	and VISIT_PURPOSE_EN != 'Hajj'
 	and year >= year(@start_date)
 	and MONTH_NUM >= month(@start_date)
+	and DATEFROMPARTS(YEAR, MONTH_NUM, 1) >= @start_date
 group by
 	YEAR,
 	MONTH_NUM,
@@ -67,8 +68,40 @@ select
 from monthly_domestic_facts mf
 join SIDR.dbo.DIM_DATE d
     on d.[YEAR] = mf.[year] and d.[MONTH] = mf.month
-
-)select * into #result from daily_domestic_facts
+),facts2 as( --[MT].[estimates].[TOURISM_FLOWS_YTD_TBL]
+select 
+	'domestic_fact_flows' as data_type,
+	d.DateFormat1 as date,
+	d.[YEAR] as year,
+	d.[MONTH] as month,
+	d.DayofMonth as day,
+	'Saudi Arabia' as country,
+	s.PURPOSE as purpose,
+	s.Visitors_YTD as daily_visits,
+	s.Spend_YTD as daily_spend
+from [MT].[estimates].[TOURISM_FLOWS_YTD_TBL] s
+left join SIDR.dbo.DIM_DATE d
+	on s.DATE_KEY = d.ID_Day	
+where
+	YTD_Source = 'DS Official'
+	and TOURIST_TYPE = 'Domestic'
+), combined as( -- Priority to Table t1
+SELECT 
+	COALESCE(t1.data_type, t2.data_type) AS data_type,
+    COALESCE(t1.date, t2.date) AS date,
+    COALESCE(t1.year, t2.year) AS year,
+    COALESCE(t1.month, t2.month) AS month,
+    COALESCE(t1.day, t2.day) AS day,
+    COALESCE(t1.country, t2.country) AS country,
+    COALESCE(t1.purpose, t2.purpose) AS purpose,
+    COALESCE(t1.daily_visits, t2.daily_visits) AS daily_visits,
+    COALESCE(t1.daily_spend, t2.daily_spend) AS daily_spend
+FROM facts2 t1
+FULL OUTER JOIN daily_domestic_facts t2
+    ON  t1.date = t2.date
+    AND t1.country = t2.country 
+    AND t1.purpose = t2.purpose
+)select * into #result from combined
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
 
