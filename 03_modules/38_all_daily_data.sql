@@ -157,7 +157,7 @@ with combined as(
 ), combined_with_targets as (
 	SELECT
 	    c.*,
-        t.BU,
+        bu.Busines_Unit as BU,
 	    t.daily_visits_target,
 	    t.daily_spend_target
 	FROM combined c
@@ -165,6 +165,10 @@ with combined as(
 	    ON  c.date    = t.date
 	    AND c.country = t.country
 	    AND c.purpose = t.purpose
+	LEFT JOIN SIDR.dbo.Ref_Country cnt 
+        ON cnt.Country_Name_En = c.country
+    LEFT JOIN SIDR.dbo.Rel_BU_level_Country bu WITH (NOLOCK)
+        ON bu.Country_Key = cnt.Country_Key
 )SELECT * INTO #result FROM combined_with_targets;
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
