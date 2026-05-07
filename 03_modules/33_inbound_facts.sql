@@ -38,8 +38,7 @@ with mas_facts as( -- mt.mas.MAS_INBOUND_INC_VW
 	where 
 		TRIP_TYPE_EN='tourist trip'
 		and VISIT_PURPOSE_EN != 'Hajj'
-		and year >= year(@start_date)
-		and MONTH_NUM >= month(@start_date)
+		and DATEFROMPARTS(YEAR, MONTH_NUM, 1) >= @start_date
 	group by
 		YEAR,
 		MONTH_NUM,
