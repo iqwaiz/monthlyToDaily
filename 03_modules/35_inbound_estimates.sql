@@ -21,44 +21,60 @@ set @inbound_estimates_start = '2024-01-01';
 DECLARE @T SYSNAME = 'daily_inbound_estimates';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
-with monthly_inbound_estimates as(
-	SELECT
-		'inbound_analytics_estimates' as data_type,
-		v.date_estimate,
-		YEAR(v.date_estimate) as year,
-	    MONTH(v.date_estimate) as month,
-	    DAY(EOMONTH(v.date_estimate)) as days_in_month,
-		v.origin_country  as country,
-        v.purpose,
-		SUM(v.border_visits_estimate_coeffeicient) as visits,
-        SUM(v.alos * v.border_visits_estimate_coeffeicient) as nights,
-        SUM(s.spend_estimate_coeffeicient) as spend
-	FROM [ANALYTICS].[dbo].[INBOUND_VISITS_ESTIMATION] as v with(nolock)
-	LEFT JOIN [ANALYTICS].[dbo].[INBOUND_SPEND_ESTIMATION] as s with(nolock)
-		ON v.date_estimate = s.date_estimate
-	   AND v.origin_country = s.origin_country
-	   AND v.purpose = s.purpose
-	WHERE v.date_estimate >= @inbound_estimates_start
-	AND v.purpose <> 'Hajj'
-	GROUP BY
-		v.date_estimate,
-		v.origin_country,
-		v.purpose
-), daily_inbound_estimates as (
+
+IF OBJECT_ID('tempdb..#visits') IS NOT NULL DROP TABLE #visits;
+SELECT
+	date_estimate,
+	year(date_estimate) as year,
+	month(date_estimate) as month,
+	origin_country  as country,
+    purpose,
+	SUM(border_visits_estimate_coeffeicient) as visits,
+    SUM(alos * border_visits_estimate_coeffeicient) as nights,
+    DAY(EOMONTH(date_estimate)) AS days_in_month
+into #visits
+FROM [ANALYTICS].[dbo].[INBOUND_VISITS_ESTIMATION] with(nolock)
+WHERE date_estimate >= @inbound_estimates_start
+AND purpose <> 'Hajj'
+GROUP BY
+	date_estimate,
+	origin_country,
+	purpose;
+
+
+IF OBJECT_ID('tempdb..#spend') IS NOT NULL DROP TABLE #spend;
+SELECT
+	date_estimate,
+	origin_country  as country,
+    purpose,
+    SUM(spend_estimate_coeffeicient) as spend
+into #spend
+FROM [ANALYTICS].[dbo].[INBOUND_SPEND_ESTIMATION] with(nolock)
+WHERE date_estimate >= @inbound_estimates_start
+AND purpose <> 'Hajj'
+GROUP BY
+	date_estimate,
+	origin_country,
+	purpose;
+		
+		
+with daily_inbound_estimates as (
 	select
-	    m.data_type,
-	    DATEFROMPARTS(m.year, m.month, d.[DayofMonth]) as date,
-	    m.year,
-	    m.month,
+		'inbound_analytics_estimates' as data_type,
+	    DATEFROMPARTS(v.year, v.month, d.[DayofMonth]) as date,
+	    v.year,
+	    v.month,
 	    d.[DayofMonth] as day,
-	    m.purpose,
-	    m.country,
-	    m.visits / m.days_in_month as daily_visits,
-	    m.spend  / m.days_in_month as daily_spend,
-	    m.nights / m.days_in_month as daily_nights
-	FROM monthly_inbound_estimates m
+	    v.purpose,
+	    v.country,
+	    v.visits / v.days_in_month as daily_visits,
+	    s.spend  / v.days_in_month as daily_spend,
+	    v.nights / v.days_in_month as daily_nights
+	FROM #visits v
+    LEFT JOIN #spend s ON v.date_estimate = s.date_estimate AND v.country = s.country AND v.purpose = s.purpose
 	join SIDR.dbo.DIM_DATE d
-	    on d.[YEAR] = m.[year] and d.[MONTH] = m.month
+	    -- on d.[YEAR] = v.year and d.[MONTH] = v.month
+	    on d.DateFormat1 BETWEEN v.date_estimate AND EOMONTH(v.date_estimate)
 ), flows_estimates as (
 	select 
 		'inbound_flows_estimates' as data_type,
@@ -74,7 +90,8 @@ with monthly_inbound_estimates as(
 	left join SIDR.dbo.DIM_DATE d
 		on f.DATE_KEY = d.ID_Day	
 	where
-		YTD_Source = 'Estimated'
+		d.DateFormat1 >= @inbound_estimates_start
+		and YTD_Source = 'Estimated'
 		and TOURIST_TYPE = 'Inbound'
 ), combined as (
 	SELECT 
