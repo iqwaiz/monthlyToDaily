@@ -156,9 +156,17 @@ with combined as(
 	*/
 ), combined_with_targets as (
 	SELECT
-	    c.*,
+	    c.data_type,
+	    c.date,
+	    c.year,
+	    c.month,
+	    c.day,
+	    c.country,
         bu.Busines_Unit as BU,
+        c.purpose,
+        c.daily_visits,
 	    t.daily_visits_target,
+	    c.daily_spend,
 	    t.daily_spend_target
 	FROM combined c
 	LEFT JOIN ibraheem_test.dailyData.targets t
