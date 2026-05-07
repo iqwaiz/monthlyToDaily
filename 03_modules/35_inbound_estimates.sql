@@ -109,7 +109,48 @@ with daily_inbound_estimates as (
 	    ON  t1.date = t2.date
 	    AND t1.country = t2.country 
 	    AND t1.purpose = t2.purpose
-)SELECT * INTO #result FROM combined;
+)
+/*
+, combined AS (
+
+    -- 1. Rows that exist in daily_inbound_estimates (t1)
+    SELECT
+        t1.data_type,
+        t1.date,
+        t1.year,
+        t1.month,
+        t1.day,
+        t1.country,
+        t1.purpose,
+        t1.daily_visits,
+        t1.daily_spend
+    FROM daily_inbound_estimates t1
+
+    UNION ALL
+
+    -- 2. Rows that exist only in flows_estimates (t2)
+    SELECT
+        t2.data_type,
+        t2.date,
+        t2.year,
+        t2.month,
+        t2.day,
+        t2.country,
+        t2.purpose,
+        t2.daily_visits,
+        t2.daily_spend
+    FROM flows_estimates t2
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM daily_inbound_estimates t1
+        WHERE t1.date = t2.date
+          AND t1.country = t2.country
+          AND t1.purpose = t2.purpose
+    )
+)
+*/
+
+SELECT * INTO #result FROM combined;
 
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
