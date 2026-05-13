@@ -91,6 +91,7 @@ left join SIDR.dbo.DIM_DATE d
 where
 	YTD_Source = 'DS Official'
 	and TOURIST_TYPE = 'Inbound'
+	and purpose != 'Hajj'
 ),combined as(
 SELECT 
 	COALESCE(t1.data_type, t2.data_type) AS data_type,

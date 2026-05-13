@@ -93,6 +93,7 @@ with daily_inbound_estimates as (
 		d.DateFormat1 >= @inbound_estimates_start
 		and YTD_Source = 'Estimated'
 		and TOURIST_TYPE = 'Inbound'
+		and purpose != 'Hajj'
 ), combined as (
 	SELECT 
 		COALESCE(t1.data_type, t2.data_type) AS data_type,
