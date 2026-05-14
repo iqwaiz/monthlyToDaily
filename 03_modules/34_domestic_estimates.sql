@@ -21,7 +21,7 @@ DECLARE @T SYSNAME = 'daily_domestic_estimates';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
 
 with daily_domestic_estimates as (select
-	'domestic_estimate' as data_type,
+	'domestic_estimate_flows' as data_type,
 	d.DayDate as date,
 	d.[YEAR] as year,
 	d.[MONTH] as month,

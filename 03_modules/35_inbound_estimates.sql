@@ -57,7 +57,7 @@ GROUP BY
 		
 with daily_inbound_estimates as (
 	select
-		'inbound_analytics_estimates' as data_type,
+		'inbound_estimates_analytics' as data_type,
 	    DATEFROMPARTS(v.year, v.month, d.[DayofMonth]) as date,
 	    v.year,
 	    v.month,
@@ -74,7 +74,7 @@ with daily_inbound_estimates as (
 	    on d.DateFormat1 BETWEEN v.date_estimate AND EOMONTH(v.date_estimate)
 ), flows_estimates as (
 	select 
-		'inbound_flows_estimates' as data_type,
+		'inbound_estimates_flows' as data_type,
 		d.DateFormat1 as date,
 		d.[YEAR] as year,
 		d.[MONTH] as month,

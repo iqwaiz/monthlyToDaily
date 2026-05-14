@@ -157,7 +157,12 @@ with combined as(
 	*/
 ), combined_with_targets as (
 	SELECT
-	    c.data_type,
+	    --c.data_type,
+
+		PARSENAME(REPLACE(c.data_type, '_', '.'), 3) AS data_domain,
+        PARSENAME(REPLACE(c.data_type, '_', '.'), 2) AS data_type,
+        PARSENAME(REPLACE(c.data_type, '_', '.'), 1) AS data_source,
+
 	    c.date,
 	    c.year,
 	    c.month,
