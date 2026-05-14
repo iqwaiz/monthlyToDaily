@@ -4,6 +4,9 @@
 --USE ibraheem_test;
 --
 CREATE OR ALTER PROCEDURE dailyData.usp_build_all_daily_data
+(
+    @start_date DATE = '2020-01-01'
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -12,8 +15,6 @@ BEGIN
 
 
 
-
-DECLARE @start_date date = '2025-01-01';
 
 DECLARE @domestic_estimates_start date;
 DECLARE @inbound_estimates_start date;

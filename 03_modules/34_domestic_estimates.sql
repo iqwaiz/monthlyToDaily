@@ -4,6 +4,9 @@
 --USE ibraheem_test;
 --
 CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_domestic_estimates
+(
+    @start_date DATE = '2020-01-01'
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -13,9 +16,6 @@ BEGIN
 
 
 
-
-declare @domestic_estimates_start date;
-set @domestic_estimates_start = '2024-01-01';
 
 DECLARE @T SYSNAME = 'daily_domestic_estimates';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
@@ -38,7 +38,7 @@ where
 	TOURIST_TYPE = 'Domestic'
 	and YTD_Source = 'Estimated'
 	and PURPOSE != 'Hajj'
-	and d.DayDate >= @domestic_estimates_start
+	and d.DayDate >= @start_date
 ) 
 select * into #result from daily_domestic_estimates;
 

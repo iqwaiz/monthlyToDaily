@@ -4,6 +4,9 @@
 --USE ibraheem_test;
 --
 CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_inbound_facts
+(
+    @start_date DATE = '2020-01-01'
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -13,8 +16,6 @@ BEGIN
 
 
 
-
-declare @start_date date = '2024-01-01';
 
 DECLARE @T SYSNAME = 'daily_inbound_facts';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;

@@ -4,6 +4,9 @@
 --USE ibraheem_test;
 --
 CREATE OR ALTER PROCEDURE dailyData.usp_build_daily_inbound_estimates
+(
+    @start_date DATE = '2020-01-01'
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -11,12 +14,6 @@ BEGIN
 
 
 
-
-
-
-DECLARE @inbound_estimates_start date;
-
-set @inbound_estimates_start = '2024-01-01';
 
 DECLARE @T SYSNAME = 'daily_inbound_estimates';
 IF OBJECT_ID('tempdb..#result') IS NOT NULL DROP TABLE #result;
@@ -34,7 +31,7 @@ SELECT
     DAY(EOMONTH(date_estimate)) AS days_in_month
 into #visits
 FROM [ANALYTICS].[dbo].[INBOUND_VISITS_ESTIMATION] with(nolock)
-WHERE date_estimate >= @inbound_estimates_start
+WHERE date_estimate >= @start_date
 AND purpose <> 'Hajj'
 GROUP BY
 	date_estimate,
@@ -50,7 +47,7 @@ SELECT
     SUM(spend_estimate_coeffeicient) as spend
 into #spend
 FROM [ANALYTICS].[dbo].[INBOUND_SPEND_ESTIMATION] with(nolock)
-WHERE date_estimate >= @inbound_estimates_start
+WHERE date_estimate >= @start_date
 AND purpose <> 'Hajj'
 GROUP BY
 	date_estimate,
@@ -90,7 +87,7 @@ with daily_inbound_estimates as (
 	left join SIDR.dbo.DIM_DATE d
 		on f.DATE_KEY = d.ID_Day	
 	where
-		d.DateFormat1 >= @inbound_estimates_start
+		d.DateFormat1 >= @start_date
 		and YTD_Source = 'Estimated'
 		and TOURIST_TYPE = 'Inbound'
 		and purpose != 'Hajj'

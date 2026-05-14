@@ -21,6 +21,9 @@
 --
 
 CREATE OR ALTER PROCEDURE dailyData.usp_run_all_daily_ETL
+(
+    @start_date DATE = '2020-01-01'
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -28,16 +31,16 @@ BEGIN
     EXEC dailyData.usp_build_border;
     EXEC dailyData.usp_build_targets;
 
-    EXEC dailyData.usp_build_daily_domestic_facts;
-    EXEC dailyData.usp_build_daily_inbound_facts;
+    EXEC dailyData.usp_build_daily_domestic_facts @start_date = @start_date;;
+    EXEC dailyData.usp_build_daily_inbound_facts @start_date = @start_date;;
 
-    EXEC dailyData.usp_build_daily_domestic_estimates;
-    EXEC dailyData.usp_build_daily_inbound_estimates;
+    EXEC dailyData.usp_build_daily_domestic_estimates @start_date = @start_date;;
+    EXEC dailyData.usp_build_daily_inbound_estimates @start_date = @start_date;;
 
-    EXEC dailyData.usp_build_daily_domestic_predictions;
-    EXEC dailyData.usp_build_daily_inbound_predictions;
+    EXEC dailyData.usp_build_daily_domestic_predictions @start_date = @start_date;;
+    EXEC dailyData.usp_build_daily_inbound_predictions @start_date = @start_date;;
 
-    EXEC dailyData.usp_build_all_daily_data;
+    EXEC dailyData.usp_build_all_daily_data @start_date = @start_date;;
 END;
 
 --EXEC dailyData.usp_run_all_daily_ETL;
