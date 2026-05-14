@@ -39,8 +39,6 @@ from mt.mas.MAS_DOMESTICS_INC_VW
 where 
 	TRIP_TYPE_EN='tourist trip'
 	and VISIT_PURPOSE_EN != 'Hajj'
-	and year >= year(@start_date)
-	and MONTH_NUM >= month(@start_date)
 	and DATEFROMPARTS(YEAR, MONTH_NUM, 1) >= @start_date
 group by
 	YEAR,
@@ -85,22 +83,43 @@ where
 	YTD_Source = 'DS Official'
 	and TOURIST_TYPE = 'Domestic'
 	and purpose != 'Hajj'
-), combined as( -- Priority to Table t1
-SELECT 
-	COALESCE(t1.data_type, t2.data_type) AS data_type,
-    COALESCE(t1.date, t2.date) AS date,
-    COALESCE(t1.year, t2.year) AS year,
-    COALESCE(t1.month, t2.month) AS month,
-    COALESCE(t1.day, t2.day) AS day,
-    COALESCE(t1.country, t2.country) AS country,
-    COALESCE(t1.purpose, t2.purpose) AS purpose,
-    COALESCE(t1.daily_visits, t2.daily_visits) AS daily_visits,
-    COALESCE(t1.daily_spend, t2.daily_spend) AS daily_spend
-FROM facts2 t1
-FULL OUTER JOIN daily_domestic_facts t2
-    ON  t1.date = t2.date
-    AND t1.country = t2.country 
-    AND t1.purpose = t2.purpose
+),t1_months as (
+	SELECT DISTINCT year, month
+    FROM facts2
+), t1_data as (
+	select
+		t.data_type,
+	    t.date,
+	    t.year,
+	    t.month,
+	    t.day,
+	    t.country,
+	    t.purpose,
+	    t.daily_visits,
+	    t.daily_spend
+    from facts2 t
+),t2_data as (
+	SELECT 
+		t.data_type,
+	    t.date,
+	    t.year,
+	    t.month,
+	    t.day,
+	    t.country,
+	    t.purpose,
+	    t.daily_visits,
+	    t.daily_spend
+    FROM daily_domestic_facts t
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM t1_months t1m
+        WHERE t.year = t1m.year
+          AND t.month = t1m.month
+    )
+),combined as(
+	SELECT * FROM t1_data
+    UNION ALL
+    SELECT * FROM t2_data
 )select * into #result from combined
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;

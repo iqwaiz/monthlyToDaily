@@ -94,64 +94,44 @@ with daily_inbound_estimates as (
 		and YTD_Source = 'Estimated'
 		and TOURIST_TYPE = 'Inbound'
 		and purpose != 'Hajj'
-), combined as (
+),t1_months as (
+	SELECT DISTINCT year, month
+    FROM daily_inbound_estimates
+), t1_data as (
+	select
+		t.data_type,
+	    t.date,
+	    t.year,
+	    t.month,
+	    t.day,
+	    t.country,
+	    t.purpose,
+	    t.daily_visits,
+	    t.daily_spend
+    from daily_inbound_estimates t
+),t2_data as (
 	SELECT 
-		COALESCE(t1.data_type, t2.data_type) AS data_type,
-	    COALESCE(t1.date, t2.date) AS date,
-	    COALESCE(t1.year, t2.year) AS year,
-	    COALESCE(t1.month, t2.month) AS month,
-	    COALESCE(t1.day, t2.day) AS day,
-	    COALESCE(t1.country, t2.country) AS country,
-	    COALESCE(t1.purpose, t2.purpose) AS purpose,
-	    COALESCE(t1.daily_visits, t2.daily_visits) AS daily_visits,
-	    COALESCE(t1.daily_spend, t2.daily_spend) AS daily_spend
-	FROM daily_inbound_estimates t1
-	FULL OUTER JOIN flows_estimates t2
-	    ON  t1.date = t2.date
-	    AND t1.country = t2.country 
-	    AND t1.purpose = t2.purpose
-)
-/*
-, combined AS (
-
-    -- 1. Rows that exist in daily_inbound_estimates (t1)
-    SELECT
-        t1.data_type,
-        t1.date,
-        t1.year,
-        t1.month,
-        t1.day,
-        t1.country,
-        t1.purpose,
-        t1.daily_visits,
-        t1.daily_spend
-    FROM daily_inbound_estimates t1
-
-    UNION ALL
-
-    -- 2. Rows that exist only in flows_estimates (t2)
-    SELECT
-        t2.data_type,
-        t2.date,
-        t2.year,
-        t2.month,
-        t2.day,
-        t2.country,
-        t2.purpose,
-        t2.daily_visits,
-        t2.daily_spend
-    FROM flows_estimates t2
+		t.data_type,
+	    t.date,
+	    t.year,
+	    t.month,
+	    t.day,
+	    t.country,
+	    t.purpose,
+	    t.daily_visits,
+	    t.daily_spend
+    FROM flows_estimates t
     WHERE NOT EXISTS (
         SELECT 1
-        FROM daily_inbound_estimates t1
-        WHERE t1.date = t2.date
-          AND t1.country = t2.country
-          AND t1.purpose = t2.purpose
+        FROM t1_months t1m
+        WHERE t.year = t1m.year
+          AND t.month = t1m.month
     )
-)
-*/
-
-SELECT * INTO #result FROM combined;
+),combined as(
+	SELECT * FROM t1_data
+    UNION ALL
+    SELECT * FROM t2_data
+)SELECT * INTO #result FROM combined;
 
 
 EXEC ibraheem_test.dailyData.usp_UpsertDailyTable @T;
