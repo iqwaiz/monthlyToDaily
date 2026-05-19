@@ -5,7 +5,7 @@
 --
 CREATE OR ALTER PROCEDURE dailyData.usp_build_all_daily_data
 (
-    @start_date DATE = '2000-01-01'
+    @start_date DATE = '2020-01-01'
 )
 AS
 BEGIN
