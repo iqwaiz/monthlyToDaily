@@ -22,7 +22,7 @@
 
 CREATE OR ALTER PROCEDURE dailyData.usp_run_all_daily_ETL
 (
-    @start_date DATE = '2020-01-01'
+    @start_date DATE = '2000-01-01'
 )
 AS
 BEGIN

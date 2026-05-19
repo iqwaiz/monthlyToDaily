@@ -64,35 +64,36 @@ with daily_inbound_estimates as (
 	    d.[DayofMonth] as day,
 	    v.purpose,
 	    v.country,
-	    -- v.visits / v.days_in_month as daily_visits,
-	    -- s.spend  / v.days_in_month as daily_spend,
-	    -- v.nights / v.days_in_month as daily_nights
 
-		-- Dynamic divisor
-        v.visits / 
-            CASE 
-                WHEN v.year = YEAR(GETDATE()) 
-                 AND v.month = MONTH(GETDATE())
-                    THEN DAY(GETDATE())   -- days passed this month
-                ELSE v.days_in_month
-            END AS daily_visits,
+	    v.visits / v.days_in_month as daily_visits,
+	    s.spend  / v.days_in_month as daily_spend,
+	    v.nights / v.days_in_month as daily_nights
 
-        s.spend /
-            CASE 
-                WHEN v.year = YEAR(GETDATE()) 
-                 AND v.month = MONTH(GETDATE())
-                    THEN DAY(GETDATE())
-                ELSE v.days_in_month
-            END AS daily_spend,
+		-- -- Dynamic divisor
+        -- v.visits / 
+        --     CASE 
+        --         WHEN v.year = YEAR(GETDATE()) 
+        --          AND v.month = MONTH(GETDATE())
+        --             THEN DAY(GETDATE())   -- days passed this month
+        --         ELSE v.days_in_month
+        --     END AS daily_visits,
 
-        v.nights /
-            CASE 
-                WHEN v.year = YEAR(GETDATE()) 
-                 AND v.month = MONTH(GETDATE())
-                    THEN DAY(GETDATE())
-                ELSE v.days_in_month
-            END AS daily_nights
-			
+        -- s.spend /
+        --     CASE 
+        --         WHEN v.year = YEAR(GETDATE()) 
+        --          AND v.month = MONTH(GETDATE())
+        --             THEN DAY(GETDATE())
+        --         ELSE v.days_in_month
+        --     END AS daily_spend,
+
+        -- v.nights /
+        --     CASE 
+        --         WHEN v.year = YEAR(GETDATE()) 
+        --          AND v.month = MONTH(GETDATE())
+        --             THEN DAY(GETDATE())
+        --         ELSE v.days_in_month
+        --     END AS daily_nights
+
 	FROM #visits v
     LEFT JOIN #spend s ON v.date_estimate = s.date_estimate AND v.country = s.country AND v.purpose = s.purpose
 	join SIDR.dbo.DIM_DATE d
